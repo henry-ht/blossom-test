@@ -3,7 +3,8 @@ import Alpine from 'alpinejs'
 import axios from 'axios'
 import { createIcons, icons } from 'lucide'
 
-axios.defaults.baseURL = window.location.origin
+const base = document.querySelector('base')?.getAttribute('href') ?? '/'
+axios.defaults.baseURL = window.location.origin + base
 axios.defaults.headers.common['Accept'] = 'application/json'
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 

@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "fuser -k 8000/tcp 2>/dev/null; trap 'fuser -k 8000/tcp 2>/dev/null' EXIT INT TERM; concurrently -n php,vite -c cyan,magenta \"php -S localhost:8000 router.php\" \"vite\"",
+    "dev": "concurrently -n php,vite -c cyan,magenta \"php -S localhost:8000 router.php\" \"vite\"",
     "kill": "fuser -k 8000/tcp 2>/dev/null || true",
     "build": "vite build",
     "preview": "vite preview"

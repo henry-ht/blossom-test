@@ -6,6 +6,12 @@ require __DIR__ . '/app/helpers.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+// Strip base path prefix if present
+$base = basePath();
+if ($base && str_starts_with($uri, $base)) {
+    $uri = substr($uri, strlen($base)) ?: '/';
+}
+
 // CORS
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
@@ -34,7 +40,25 @@ function jsonError(string $message, int $status = 400): void
 // GET /api/characters
 if ($method === 'GET' && $uri === '/api/characters') {
     $page = (int) ($_GET['page'] ?? 1);
-    $response = rickandmorty()->getCharacters([], $page);
+    $filters = $_GET;
+    unset($filters['page']);
+
+    if (!empty($filters['protagonists'])) {
+        unset($filters['protagonists']);
+        $ids = [1, 2, 3, 4, 5]; // Rick, Morty, Summer, Beth, Jerry
+        $characters = array_map(fn($id) => rickandmorty()->getCharacter($id), $ids);
+
+        // Apply remaining filters (species, status, etc.) client-side
+        foreach ($filters as $key => $value) {
+            $characters = array_filter($characters, function ($c) use ($key, $value) {
+                return isset($c->$key) && strcasecmp($c->$key, $value) === 0;
+            });
+        }
+
+        jsonResponse(['results' => array_values($characters)]);
+    }
+
+    $response = rickandmorty()->getCharacters($filters, $page);
     jsonResponse($response);
 }
 

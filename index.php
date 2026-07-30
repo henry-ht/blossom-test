@@ -8,136 +8,216 @@ $title = 'Inicio';
 ob_start();
 ?>
 
-  <div class="flex h-screen w-screen overflow-hidden">
+  <div x-data="charactersApp()" class="flex h-screen w-screen overflow-hidden">
 
     <!-- Sidebar Section -->
-    <aside class="w-[320px] bg-bg-sidebar border-r border-border-color flex flex-col p-6 px-4 overflow-y-auto">
+    <aside class="w-[350px] bg-bg-sidebar border-r border-border-color flex flex-col p-6 px-4">
       <h1 class="text-xl font-bold mb-5 text-text-main">Rick and Morty list</h1>
 
       <!-- Search and Filter Bar -->
-      <div class="flex gap-2 mb-6">
+      <div x-ref="searchBar" class="flex mb-6 items-center">
         <div class="relative flex-grow">
           <svg class="w-[18px] h-[18px] fill-text-muted absolute left-[10px] top-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          <input type="text" placeholder="Search or filter results"
-            class="w-full py-[10px] pl-9 pr-3 border border-border-color rounded-lg bg-[#f4f4f6] text-[13px] font-sans outline-none placeholder:text-text-muted">
+          <input type="text" placeholder="Search or filter results" x-model="search" @input="onSearchInput"
+            class="w-full py-[10px] pl-9 pr-3 border-0 border-border-color rounded-l-lg bg-[#f4f4f6] text-[13px] font-sans outline-none placeholder:text-text-muted">
         </div>
-        <button class="bg-[#f4f4f6] border border-border-color rounded-lg p-2 cursor-pointer flex items-center justify-center" aria-label="Filter">
-          <svg class="w-[18px] h-[18px] fill-text-muted" viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
-        </button>
-      </div>
-
-      <!-- Starred Characters Category -->
-      <div class="mb-6">
-        <h2 class="text-[11px] font-semibold text-text-muted tracking-[0.5px] mb-3 pl-1">STARRED CHARACTERS (2)</h2>
-
-        <div class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6] bg-accent-purple">
-          <img src="https://placeholder.com" alt="Abadango Cluster Princess" class="w-10 h-10 rounded-full object-cover mr-3">
-          <div class="flex flex-col flex-grow min-w-0">
-            <span class="text-sm font-semibold text-accent-purple-text whitespace-nowrap overflow-hidden text-ellipsis">Abadango Cluster Princess</span>
-            <span class="text-xs text-text-muted mt-0.5">Alien</span>
-          </div>
-          <button class="bg-transparent border-none cursor-pointer p-1" aria-label="Unstar">
-            <svg class="w-[18px] h-[18px] fill-heart-active stroke-heart-active stroke-2 transition-colors duration-200" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </button>
-        </div>
-
-        <div class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6]">
-          <img src="https://placeholder.com" alt="Beth Smith" class="w-10 h-10 rounded-full object-cover mr-3">
-          <div class="flex flex-col flex-grow min-w-0">
-            <span class="text-sm font-semibold text-text-main whitespace-nowrap overflow-hidden text-ellipsis">Beth Smith</span>
-            <span class="text-xs text-text-muted mt-0.5">Human</span>
-          </div>
-          <button class="bg-transparent border-none cursor-pointer p-1" aria-label="Unstar">
-            <svg class="w-[18px] h-[18px] fill-heart-active stroke-heart-active stroke-2 transition-colors duration-200" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <div class="p-2 bg-[#f4f4f6] rounded-r-lg">
+          <button @click="openFilter = !openFilter"
+            class="border-0 rounded-lg p-1 cursor-pointer flex items-center justify-center transition-colors duration-200"
+            :class="openFilter ? 'bg-accent-purple border-accent-purple' : 'bg-[#f4f4f6]'" >
+            <i data-lucide="sliders-vertical" class="w-4 h-4 text-[#7C5CFA]"></i>
           </button>
         </div>
       </div>
 
-      <!-- Regular Characters Category -->
-      <div class="mb-6">
-        <h2 class="text-[11px] font-semibold text-text-muted tracking-[0.5px] mb-3 pl-1">CHARACTERS (4)</h2>
+      <h2 class="text-[11px] font-semibold text-text-muted tracking-[0.5px] mb-3 pl-1">
+        <span x-text="selectedFilter === 'all' ? 'CHARACTERS' : selectedFilter.toUpperCase() + ' CHARACTERS'"></span>
+        (<span x-text="characters.length"></span>)
+      </h2>
 
-        <div class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6]">
-          <img src="https://placeholder.com" alt="Jerry Smith" class="w-10 h-10 rounded-full object-cover mr-3">
-          <div class="flex flex-col flex-grow min-w-0">
-            <span class="text-sm font-semibold text-text-main whitespace-nowrap overflow-hidden text-ellipsis">Jerry Smith</span>
-            <span class="text-xs text-text-muted mt-0.5">Human</span>
-          </div>
-          <button class="bg-transparent border-none cursor-pointer p-1" aria-label="Star">
-            <svg class="w-[18px] h-[18px] fill-none stroke-heart-inactive stroke-2 transition-colors duration-200" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </button>
+      <!-- Characters List -->
+      <div class="flex-1 overflow-y-auto">
+
+        <div x-show="loading" class="flex items-center justify-center py-8">
+          <svg class="animate-spin w-6 h-6 text-[#7C5CFA]" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
         </div>
 
-        <div class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6]">
-          <img src="https://placeholder.com" alt="Morty Smith" class="w-10 h-10 rounded-full object-cover mr-3">
-          <div class="flex flex-col flex-grow min-w-0">
-            <span class="text-sm font-semibold text-text-main whitespace-nowrap overflow-hidden text-ellipsis">Morty Smith</span>
-            <span class="text-xs text-text-muted mt-0.5">Human</span>
+        <template x-for="char in characters" :key="char.id">
+          <div @click="selected = char"
+            class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6]"
+            :class="selected?.id === char.id ? 'bg-accent-purple' : ''">
+            <img :src="char.image" :alt="char.name" class="w-10 h-10 rounded-full object-cover mr-3">
+            <div class="flex flex-col flex-grow min-w-0">
+              <span class="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis"
+                :class="selected?.id === char.id ? 'text-accent-purple-text' : 'text-text-main'"
+                x-text="char.name"></span>
+              <span class="text-xs text-text-muted mt-0.5" x-text="char.species"></span>
+            </div>
+            <div class="rounded-full p-1 transition-colors duration-200"
+              :class="selected?.id === char.id && isProtagonist(char.id) ? 'bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]' : ''">
+              <svg class="w-[18px] h-[18px] stroke-2 transition-colors duration-200" viewBox="0 0 24 24"
+                :class="isProtagonist(char.id) ? 'fill-[#FF4D67] stroke-[#FF4D67]' : 'fill-none stroke-[#B6BBCB]'">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </div>
           </div>
-          <button class="bg-transparent border-none cursor-pointer p-1" aria-label="Star">
-            <svg class="w-[18px] h-[18px] fill-none stroke-heart-inactive stroke-2 transition-colors duration-200" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </button>
-        </div>
+        </template>
 
-        <div class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6]">
-          <img src="https://placeholder.com" alt="Rick Sanchez" class="w-10 h-10 rounded-full object-cover mr-3">
-          <div class="flex flex-col flex-grow min-w-0">
-            <span class="text-sm font-semibold text-text-main whitespace-nowrap overflow-hidden text-ellipsis">Rick Sanchez</span>
-            <span class="text-xs text-text-muted mt-0.5">Human</span>
-          </div>
-          <button class="bg-transparent border-none cursor-pointer p-1" aria-label="Star">
-            <svg class="w-[18px] h-[18px] fill-none stroke-heart-inactive stroke-2 transition-colors duration-200" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </button>
-        </div>
-
-        <div class="flex items-center p-3 rounded-xl mb-1 cursor-pointer transition-colors duration-200 hover:bg-[#f4f4f6]">
-          <img src="https://placeholder.com" alt="Summer Smith" class="w-10 h-10 rounded-full object-cover mr-3">
-          <div class="flex flex-col flex-grow min-w-0">
-            <span class="text-sm font-semibold text-text-main whitespace-nowrap overflow-hidden text-ellipsis">Summer Smith</span>
-            <span class="text-xs text-text-muted mt-0.5">Human</span>
-          </div>
-          <button class="bg-transparent border-none cursor-pointer p-1" aria-label="Star">
-            <svg class="w-[18px] h-[18px] fill-none stroke-heart-inactive stroke-2 transition-colors duration-200" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-          </button>
-        </div>
+        <p x-show="!characters.length && !loading" x-cloak class="text-sm text-text-muted text-center py-4">
+          No characters found
+        </p>
       </div>
     </aside>
 
     <!-- Main Detail Section -->
     <main class="flex-grow py-10 px-[60px] overflow-y-auto">
-      <div class="mb-8">
-        <div class="relative inline-block mb-4">
-          <img src="https://placeholder.com" alt="Abadango Cluster Princess" class="w-20 h-20 rounded-full object-cover">
-          <div class="absolute bottom-0 -right-1 bg-white rounded-full p-1 shadow-[0_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center">
-            <svg class="w-[14px] h-[14px] fill-heart-active stroke-heart-active stroke-2" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <template x-if="selected">
+        <div>
+          <div class="mb-8">
+            <div class="relative inline-block mb-4">
+              <img :src="selected.image" :alt="selected.name" class="w-20 h-20 rounded-full object-cover">
+              <div class="absolute bottom-0 -right-1 bg-white rounded-full p-1 shadow-[0_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center">
+                <svg class="w-[14px] h-[14px] stroke-2" viewBox="0 0 24 24"
+                  :class="isProtagonist(selected.id) ? 'fill-[#63D838] stroke-[#63D838]' : 'fill-none stroke-[#B6BBCB]'">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+            </div>
+            <h2 class="text-2xl font-bold text-text-main" x-text="selected.name"></h2>
+
+          <div class="py-4 border-b border-border-color max-w-[600px]">
+            <label class="text-[13px] text-text-muted block mb-1">Specie</label>
+            <p class="text-[15px] font-medium text-text-main" x-text="selected.species"></p>
+          </div>
+
+          <div class="py-4 border-b border-border-color max-w-[600px]">
+            <label class="text-[13px] text-text-muted block mb-1">Status</label>
+            <p class="text-[15px] font-medium text-text-main" x-text="selected.status"></p>
+          </div>
+
+          <div class="py-4 border-b border-border-color max-w-[600px]">
+            <label class="text-[13px] text-text-muted block mb-1">Gender</label>
+            <p class="text-[15px] font-medium text-text-main" x-text="selected.gender"></p>
           </div>
         </div>
-        <h2 class="text-2xl font-bold text-text-main">Abadango Cluster Princess</h2>
-      </div>
-
-      <div class="py-4 border-b border-border-color max-w-[600px]">
-        <label class="text-[13px] text-text-muted block mb-1">Specie</label>
-        <p class="text-[15px] font-medium text-text-main">Alien</p>
-      </div>
-
-      <div class="py-4 border-b border-border-color max-w-[600px]">
-        <label class="text-[13px] text-text-muted block mb-1">Status</label>
-        <p class="text-[15px] font-medium text-text-main">Alive</p>
-      </div>
-
-      <div class="py-4 border-b border-border-color max-w-[600px]">
-        <label class="text-[13px] text-text-muted block mb-1">Occupation</label>
-        <p class="text-[15px] font-medium text-text-main">Princess</p>
-      </div>
+      </template>
     </main>
+
+    <!-- FILTER CARD -->
+    <div x-ref="filterCard"
+         x-show="openFilter"
+         x-cloak
+         x-transition.origin.top.right
+         @click.outside="openFilter = false"
+         @resize.window="updateFilterPos"
+         class="fixed z-50 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 w-[302px]">
+        <h4 class="text-[11px] font-semibold text-gray-500 mb-2">Character</h4>
+        <div class="flex gap-2">
+            <button @click="selectedFilter = 'all'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedFilter === 'all' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">All</button>
+            <button @click="selectedFilter = 'starred'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedFilter === 'starred' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Starred</button>
+            <button @click="selectedFilter = 'others'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedFilter === 'others' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Others</button>
+        </div>
+        <h4 class="text-[11px] font-semibold text-gray-500 mt-6 mb-2">Specie</h4>
+        <div class="flex gap-2">
+            <button @click="selectedSpecie = 'all'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedSpecie === 'all' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">All</button>
+            <button @click="selectedSpecie = 'human'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedSpecie === 'human' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Human</button>
+            <button @click="selectedSpecie = 'alien'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedSpecie === 'alien' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Alien</button>
+        </div>
+        <button @click="applyFilters()" class="mt-6 w-full h-10 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            :class="dirtyFilter ? 'bg-[#8054C7] text-white hover:bg-[#6B3FB5]' : 'bg-[#F3F4F8] text-gray-500'">Filter</button>
+    </div>
 
   </div>
 
-<!-- <div x-data="{ characters: [] }" x-init="characters = await (await $http.get('/api/characters')).data.results">
-  <template x-for="char in characters" :key="char.id">
-    <p x-text="char.name"></p>
-  </template>
-</div> -->
+<script>
+  function charactersApp() {
+    return {
+      characters: [],
+      selected: null,
+      search: '',
+      searchTimeout: null,
+      openFilter: false,
+      loading: false,
+      dirtyFilter: false,
+      selectedFilter: 'all',
+      selectedSpecie: 'all',
+      protagonistIds: [1, 2, 3, 4, 5],
+      isProtagonist(id) {
+        return this.protagonistIds.includes(id)
+      },
+      async init() {
+        this.$watch('openFilter', (val) => {
+          if (val) {
+            this.dirtyFilter = false
+            this.updateFilterPos()
+          }
+        })
+        await this.fetchCharacters()
+      },
+      onSearchInput() {
+        clearTimeout(this.searchTimeout)
+        this.searchTimeout = setTimeout(() => {
+          if (this.search.length >= 3) {
+            this.fetchCharacters()
+          } else if (this.search.length === 0) {
+            this.fetchCharacters()
+          }
+        }, 300)
+      },
+      applyFilters() {
+        this.openFilter = false
+        this.fetchCharacters()
+      },
+      async fetchCharacters() {
+        this.characters = []
+        this.loading = true
+        const params = new URLSearchParams()
+        if (this.selectedFilter === 'starred') params.set('protagonists', '1')
+        if (this.selectedSpecie !== 'all') params.set('species', this.selectedSpecie)
+        if (this.search.length >= 3) params.set('name', this.search)
+        const qs = params.toString()
+        const url = 'api/characters' + (qs ? '?' + qs : '')
+        try {
+          const { data } = await this.$http.get(url)
+          this.characters = data.results ?? data
+          if (!this.selected || !this.characters.find(c => c.id === this.selected.id)) {
+            this.selected = this.characters[0] ?? null
+          }
+        } catch (e) {
+          console.error('Failed to fetch characters', e)
+        } finally {
+          this.loading = false
+        }
+      },
+      updateFilterPos() {
+        this.$nextTick(() => {
+          const bar = this.$refs.searchBar
+          const card = this.$refs.filterCard
+          if (!bar || !card) return
+          const rect = bar.getBoundingClientRect()
+          card.style.top = rect.bottom + 'px'
+          card.style.left = rect.left + 'px'
+          card.style.width = rect.width + 'px'
+        })
+      }
+    }
+  }
+</script>
 
 <?php
 $content = ob_get_clean();
