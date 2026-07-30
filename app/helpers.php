@@ -14,6 +14,18 @@ function basePath(): string
     return $path;
 }
 
+function apiPerPage(): int
+{
+    static $perPage = null;
+
+    if ($perPage === null) {
+        $env = parse_ini_file(__DIR__ . '/../.env');
+        $perPage = (int) ($env['API_PER_PAGE'] ?? 20);
+    }
+
+    return $perPage;
+}
+
 function rickandmorty(): RickAndMortyService
 {
     static $instance = null;

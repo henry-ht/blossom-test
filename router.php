@@ -39,26 +39,29 @@ function jsonError(string $message, int $status = 400): void
 
 // GET /api/characters
 if ($method === 'GET' && $uri === '/api/characters') {
-    $page = (int) ($_GET['page'] ?? 1);
+    $requestedPage = (int) ($_GET['page'] ?? 1);
     $filters = $_GET;
     unset($filters['page']);
 
     if (!empty($filters['protagonists'])) {
         unset($filters['protagonists']);
-        $ids = [1, 2, 3, 4, 5]; // Rick, Morty, Summer, Beth, Jerry
+        $ids = [1, 2, 3, 4, 5];
         $characters = array_map(fn($id) => rickandmorty()->getCharacter($id), $ids);
 
-        // Apply remaining filters (species, status, etc.) client-side
         foreach ($filters as $key => $value) {
             $characters = array_filter($characters, function ($c) use ($key, $value) {
                 return isset($c->$key) && strcasecmp($c->$key, $value) === 0;
             });
         }
 
-        jsonResponse(['results' => array_values($characters)]);
+        jsonResponse([
+            'count' => count($characters),
+            'pages' => 1,
+            'results' => array_values($characters),
+        ]);
     }
 
-    $response = rickandmorty()->getCharacters($filters, $page);
+    $response = rickandmorty()->getCharacters($filters, $requestedPage);
     jsonResponse($response);
 }
 

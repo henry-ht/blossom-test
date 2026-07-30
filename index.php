@@ -32,7 +32,7 @@ ob_start();
 
       <h2 class="text-[11px] font-semibold text-text-muted tracking-[0.5px] mb-3 pl-1">
         <span x-text="selectedFilter === 'all' ? 'CHARACTERS' : selectedFilter.toUpperCase() + ' CHARACTERS'"></span>
-        (<span x-text="characters.length"></span>)
+        (<span x-text="totalCount"></span>)
       </h2>
 
       <!-- Characters List -->
@@ -69,11 +69,27 @@ ob_start();
         <p x-show="!characters.length && !loading" x-cloak class="text-sm text-text-muted text-center py-4">
           No characters found
         </p>
+
+        <div x-show="totalPages > 1 && !loading" class="flex items-center justify-center gap-3 py-4">
+          <button @click="goToPage(page - 1)" :disabled="page <= 1"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            :class="page <= 1 ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
+            Prev
+          </button>
+          <span class="text-sm text-gray-500">
+            <span x-text="page"></span> / <span x-text="totalPages"></span>
+          </span>
+          <button @click="goToPage(page + 1)" :disabled="page >= totalPages"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+            :class="page >= totalPages ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
+            Next
+          </button>
+        </div>
       </div>
     </aside>
 
-    <!-- Main Detail Section -->
-    <main class="flex-grow py-10 px-[60px] overflow-y-auto">
+    <!-- Main Detail Section (lg+) -->
+    <main class="hidden lg:block flex-grow py-10 px-[60px] overflow-y-auto">
       <template x-if="selected">
         <div>
           <div class="mb-8">
@@ -105,6 +121,50 @@ ob_start();
         </div>
       </template>
     </main>
+
+    <!-- Detail Modal (below lg) -->
+    <template x-if="selected">
+      <div class="fixed inset-0 z-50 lg:hidden">
+        <div class="absolute inset-0 bg-black/40" @click="selected = null"></div>
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto">
+          <div class="flex justify-between items-start mb-6">
+            <div class="flex items-center gap-4">
+              <div class="relative inline-block">
+                <img :src="selected.image" :alt="selected.name" class="w-16 h-16 rounded-full object-cover">
+                <div class="absolute bottom-0 -right-1 bg-white rounded-full p-1 shadow-[0_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center">
+                  <svg class="w-[12px] h-[12px] stroke-2" viewBox="0 0 24 24"
+                    :class="isProtagonist(selected.id) ? 'fill-[#63D838] stroke-[#63D838]' : 'fill-none stroke-[#B6BBCB]'">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h2 class="text-lg font-bold text-text-main" x-text="selected.name"></h2>
+                <span class="text-xs text-text-muted" x-text="selected.species"></span>
+              </div>
+            </div>
+            <button @click="selected = null" class="p-1 cursor-pointer">
+              <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="py-3 border-t border-gray-100">
+            <label class="text-[12px] text-text-muted block mb-0.5">Species</label>
+            <p class="text-sm font-medium text-text-main" x-text="selected.species"></p>
+          </div>
+          <div class="py-3 border-t border-gray-100">
+            <label class="text-[12px] text-text-muted block mb-0.5">Status</label>
+            <p class="text-sm font-medium text-text-main" x-text="selected.status"></p>
+          </div>
+          <div class="py-3 border-t border-gray-100">
+            <label class="text-[12px] text-text-muted block mb-0.5">Gender</label>
+            <p class="text-sm font-medium text-text-main" x-text="selected.gender"></p>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <!-- FILTER CARD -->
     <div x-ref="filterCard"
@@ -145,6 +205,8 @@ ob_start();
   </div>
 
 <script>
+  const PER_PAGE = <?= apiPerPage() ?>;
+
   function charactersApp() {
     return {
       characters: [],
@@ -154,6 +216,9 @@ ob_start();
       openFilter: false,
       loading: false,
       dirtyFilter: false,
+      page: 1,
+      totalPages: 1,
+      totalCount: 0,
       selectedFilter: 'all',
       selectedSpecie: 'all',
       protagonistIds: [1, 2, 3, 4, 5],
@@ -172,21 +237,23 @@ ob_start();
       onSearchInput() {
         clearTimeout(this.searchTimeout)
         this.searchTimeout = setTimeout(() => {
-          if (this.search.length >= 3) {
-            this.fetchCharacters()
-          } else if (this.search.length === 0) {
+          if (this.search.length >= 3 || this.search.length === 0) {
+            this.page = 1
             this.fetchCharacters()
           }
         }, 300)
       },
       applyFilters() {
         this.openFilter = false
+        this.page = 1
         this.fetchCharacters()
       },
       async fetchCharacters() {
         this.characters = []
         this.loading = true
+        const apiPage = Math.floor((this.page - 1) * PER_PAGE / 20) + 1
         const params = new URLSearchParams()
+        params.set('page', String(apiPage))
         if (this.selectedFilter === 'starred') params.set('protagonists', '1')
         if (this.selectedSpecie !== 'all') params.set('species', this.selectedSpecie)
         if (this.search.length >= 3) params.set('name', this.search)
@@ -194,7 +261,11 @@ ob_start();
         const url = 'api/characters' + (qs ? '?' + qs : '')
         try {
           const { data } = await this.$http.get(url)
-          this.characters = data.results ?? data
+          const allResults = data.results ?? []
+          this.totalPages = Math.ceil((data.count ?? allResults.length) / PER_PAGE)
+          this.totalCount = data.count ?? allResults.length
+          const offset = ((this.page - 1) * PER_PAGE) % 20
+          this.characters = allResults.slice(offset, offset + PER_PAGE)
           if (!this.selected || !this.characters.find(c => c.id === this.selected.id)) {
             this.selected = this.characters[0] ?? null
           }
@@ -203,6 +274,10 @@ ob_start();
         } finally {
           this.loading = false
         }
+      },
+      goToPage(p) {
+        this.page = p
+        this.fetchCharacters()
       },
       updateFilterPos() {
         this.$nextTick(() => {
