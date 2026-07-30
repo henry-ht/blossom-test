@@ -69,22 +69,22 @@ ob_start();
         <p x-show="!characters.length && !loading" x-cloak class="text-sm text-text-muted text-center py-4">
           No characters found
         </p>
+      </div>
 
-        <div x-show="totalPages > 1 && !loading" class="flex items-center justify-center gap-3 py-4">
-          <button @click="goToPage(page - 1)" :disabled="page <= 1"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-            :class="page <= 1 ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
-            Prev
-          </button>
-          <span class="text-sm text-gray-500">
-            <span x-text="page"></span> / <span x-text="totalPages"></span>
-          </span>
-          <button @click="goToPage(page + 1)" :disabled="page >= totalPages"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-            :class="page >= totalPages ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
-            Next
-          </button>
-        </div>
+      <div x-show="totalPages > 1 && !loading" class="flex items-center justify-center gap-3 py-3 border-t border-border-color">
+        <button @click="goToPage(page - 1)" :disabled="page <= 1"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+          :class="page <= 1 ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
+          Prev
+        </button>
+        <span class="text-sm text-gray-500">
+          <span x-text="page"></span> / <span x-text="totalPages"></span>
+        </span>
+        <button @click="goToPage(page + 1)" :disabled="page >= totalPages"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
+          :class="page >= totalPages ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
+          Next
+        </button>
       </div>
     </aside>
 
