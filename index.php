@@ -101,17 +101,27 @@ ob_start();
     <main class="hidden lg:block flex-grow py-10 px-[60px] overflow-y-auto">
       <template x-if="selected">
         <div>
-          <div class="mb-8">
-            <div class="relative inline-block mb-4">
-              <img :src="selected.image" :alt="selected.name" class="w-20 h-20 rounded-full object-cover">
-              <div class="absolute bottom-0 -right-1 bg-white rounded-full p-1 shadow-[0_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center">
-                <svg class="w-[14px] h-[14px] stroke-2" viewBox="0 0 24 24"
-                  :class="isProtagonist(selected.id) ? 'fill-[#63D838] stroke-[#63D838]' : 'fill-none stroke-[#B6BBCB]'">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
+            <div class="flex items-center gap-3 mb-8">
+              <div class="relative inline-block">
+                <img :src="selected.image" :alt="selected.name" class="w-20 h-20 rounded-full object-cover">
+                <div class="absolute bottom-0 -right-1 bg-white rounded-full p-1 shadow-[0_2px_4px_rgba(0,0,0,0.1)] flex items-center justify-center">
+                  <svg class="w-[14px] h-[14px] stroke-2" viewBox="0 0 24 24"
+                    :class="isProtagonist(selected.id) ? 'fill-[#63D838] stroke-[#63D838]' : 'fill-none stroke-[#B6BBCB]'">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </div>
               </div>
+              <div class="flex-1">
+                <h2 class="text-2xl font-bold text-text-main" x-text="selected.name"></h2>
+              </div>
+              <button @click="softDelete(selected.id)" class="p-2 rounded-lg hover:bg-red-50 transition-colors cursor-pointer" title="Remove">
+                <svg class="w-5 h-5 text-red-400 hover:text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
             </div>
-            <h2 class="text-2xl font-bold text-text-main" x-text="selected.name"></h2>
 
           <div class="py-4 border-b border-border-color max-w-[600px]">
             <label class="text-[13px] text-text-muted block mb-1">Specie</label>
@@ -155,6 +165,13 @@ ob_start();
             <button @click="selected = null" class="p-1 cursor-pointer">
               <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="flex justify-end mb-2">
+            <button @click="softDelete(selected.id)" class="p-2 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
               </svg>
             </button>
           </div>
@@ -207,9 +224,53 @@ ob_start();
                 class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
                 :class="selectedSpecie === 'alien' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Alien</button>
         </div>
+        <h4 class="text-[11px] font-semibold text-gray-500 mt-6 mb-2">Status</h4>
+        <div class="flex gap-2">
+            <button @click="selectedStatus = 'all'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedStatus === 'all' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">All</button>
+            <button @click="selectedStatus = 'alive'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedStatus === 'alive' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Alive</button>
+            <button @click="selectedStatus = 'dead'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedStatus === 'dead' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Dead</button>
+        </div>
         <button @click="applyFilters()" class="mt-6 w-full h-10 rounded-lg text-sm font-medium transition-colors cursor-pointer"
             :class="dirtyFilter ? 'bg-[#8054C7] text-white hover:bg-[#6B3FB5]' : 'bg-[#F3F4F8] text-gray-500'">Filter</button>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <template x-teleport="body">
+      <div x-show="showDeleteModal"
+           x-cloak
+           class="fixed inset-0 z-[100] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40" @click="cancelDelete"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-[360px]">
+          <div class="flex flex-col items-center text-center">
+            <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+              <svg class="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-bold text-text-main mb-2">Delete character</h3>
+            <p class="text-sm text-text-muted mb-6">
+              Are you sure you want to delete <span class="font-semibold text-text-main" x-text="selected?.name"></span>?
+            </p>
+            <div class="flex gap-3 w-full">
+              <button @click="cancelDelete"
+                class="flex-1 h-10 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                Cancel
+              </button>
+              <button @click="confirmDelete"
+                class="flex-1 h-10 rounded-lg bg-red-500 text-sm font-medium text-white hover:bg-red-600 transition-colors cursor-pointer">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
 
   </div>
 
@@ -226,12 +287,14 @@ ob_start();
       openFilter: false,
       loading: false,
       loadingMore: false,
+      showDeleteModal: false,
       dirtyFilter: false,
       page: 1,
       totalPages: 1,
       totalCount: 0,
       selectedFilter: 'all',
       selectedSpecie: 'all',
+      selectedStatus: 'all',
       protagonistIds: [1, 2, 3, 4, 5],
       paginationType: PAGINATION_TYPE,
       sentinelObserver: null,
@@ -297,6 +360,7 @@ ob_start();
         params.set('page', String(apiPage))
         if (this.selectedFilter === 'starred') params.set('protagonists', '1')
         if (this.selectedSpecie !== 'all') params.set('species', this.selectedSpecie)
+        if (this.selectedStatus !== 'all') params.set('status', this.selectedStatus)
         if (this.search.length >= 3) params.set('name', this.search)
         const qs = params.toString()
         const url = 'api/characters' + (qs ? '?' + qs : '')
@@ -339,6 +403,19 @@ ob_start();
         this.page = p
         this.characters = []
         this.fetchCharacters()
+      },
+      softDelete(id) {
+        this.showDeleteModal = true
+      },
+      cancelDelete() {
+        this.showDeleteModal = false
+      },
+      confirmDelete() {
+        const id = this.selected.id
+        this.characters = this.characters.filter(c => c.id !== id)
+        this.totalCount = this.characters.length
+        this.selected = null
+        this.showDeleteModal = false
       },
       updateFilterPos() {
         this.$nextTick(() => {
