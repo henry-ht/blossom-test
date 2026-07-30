@@ -26,6 +26,18 @@ function apiPerPage(): int
     return $perPage;
 }
 
+function paginationType(): string
+{
+    static $type = null;
+
+    if ($type === null) {
+        $env = parse_ini_file(__DIR__ . '/../.env');
+        $type = $env['PAGINATION_TYPE'] ?? 'normal';
+    }
+
+    return $type;
+}
+
 function rickandmorty(): RickAndMortyService
 {
     static $instance = null;

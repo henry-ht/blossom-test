@@ -36,7 +36,7 @@ ob_start();
       </h2>
 
       <!-- Characters List -->
-      <div class="flex-1 overflow-y-auto">
+      <div x-ref="scrollContainer" class="flex-1 overflow-y-auto">
 
         <div x-show="loading" class="flex items-center justify-center py-8">
           <svg class="animate-spin w-6 h-6 text-[#7C5CFA]" viewBox="0 0 24 24">
@@ -69,9 +69,18 @@ ob_start();
         <p x-show="!characters.length && !loading" x-cloak class="text-sm text-text-muted text-center py-4">
           No characters found
         </p>
+
+        <div x-show="loadingMore" class="flex items-center justify-center py-4">
+          <svg class="animate-spin w-5 h-5 text-[#7C5CFA]" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+
+        <div x-ref="sentinel" x-show="paginationType === 'infinite'" class="h-px"></div>
       </div>
 
-      <div x-show="totalPages > 1 && !loading" class="flex items-center justify-center gap-3 py-3 border-t border-border-color">
+      <div x-show="totalPages > 1 && !loading && paginationType === 'normal'" class="flex items-center justify-center gap-3 py-3 border-t border-border-color">
         <button @click="goToPage(page - 1)" :disabled="page <= 1"
           class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer"
           :class="page <= 1 ? 'text-gray-300 cursor-default' : 'text-[#7C5CFA] hover:bg-[#EEE3FF]'">
@@ -206,6 +215,7 @@ ob_start();
 
 <script>
   const PER_PAGE = <?= apiPerPage() ?>;
+  const PAGINATION_TYPE = '<?= paginationType() ?>';
 
   function charactersApp() {
     return {
@@ -215,6 +225,7 @@ ob_start();
       searchTimeout: null,
       openFilter: false,
       loading: false,
+      loadingMore: false,
       dirtyFilter: false,
       page: 1,
       totalPages: 1,
@@ -222,6 +233,8 @@ ob_start();
       selectedFilter: 'all',
       selectedSpecie: 'all',
       protagonistIds: [1, 2, 3, 4, 5],
+      paginationType: PAGINATION_TYPE,
+      sentinelObserver: null,
       isProtagonist(id) {
         return this.protagonistIds.includes(id)
       },
@@ -232,26 +245,54 @@ ob_start();
             this.updateFilterPos()
           }
         })
+        if (PAGINATION_TYPE === 'infinite') {
+          this.$nextTick(() => this.setupSentinel())
+        }
+        await this.fetchCharacters(true)
+      },
+      setupSentinel() {
+        const el = this.$refs.sentinel
+        if (!el) return
+        this.sentinelObserver = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting && !this.loading && !this.loadingMore && this.page < this.totalPages) {
+            this.loadMore()
+          }
+        }, { root: this.$refs.scrollContainer })
+        this.sentinelObserver.observe(el)
+      },
+      async loadMore() {
+        this.loadingMore = true
+        this.page++
         await this.fetchCharacters()
+        this.loadingMore = false
       },
       onSearchInput() {
         clearTimeout(this.searchTimeout)
         this.searchTimeout = setTimeout(() => {
           if (this.search.length >= 3 || this.search.length === 0) {
-            this.page = 1
-            this.fetchCharacters()
+            this.resetAndFetch()
           }
         }, 300)
       },
       applyFilters() {
         this.openFilter = false
+        this.resetAndFetch()
+      },
+      resetAndFetch() {
+        this.characters = []
         this.page = 1
         this.fetchCharacters()
       },
-      async fetchCharacters() {
-        this.characters = []
-        this.loading = true
-        const apiPage = Math.floor((this.page - 1) * PER_PAGE / 20) + 1
+      async fetchCharacters(resetSelected = false) {
+        const isAppend = this.page > 1
+        if (!isAppend) {
+          this.characters = []
+        }
+        this.loading = !isAppend
+
+        const isInfinite = this.paginationType === 'infinite'
+        const apiPage = isInfinite ? this.page : Math.floor((this.page - 1) * PER_PAGE / 20) + 1
+
         const params = new URLSearchParams()
         params.set('page', String(apiPage))
         if (this.selectedFilter === 'starred') params.set('protagonists', '1')
@@ -261,12 +302,31 @@ ob_start();
         const url = 'api/characters' + (qs ? '?' + qs : '')
         try {
           const { data } = await this.$http.get(url)
-          const allResults = data.results ?? []
-          this.totalPages = Math.ceil((data.count ?? allResults.length) / PER_PAGE)
-          this.totalCount = data.count ?? allResults.length
-          const offset = ((this.page - 1) * PER_PAGE) % 20
-          this.characters = allResults.slice(offset, offset + PER_PAGE)
-          if (!this.selected || !this.characters.find(c => c.id === this.selected.id)) {
+
+          if (isInfinite) {
+            const results = data.results ?? []
+            this.totalPages = data.pages ?? 1
+            this.totalCount = data.count ?? results.length
+            if (isAppend) {
+              this.characters = this.characters.concat(results)
+            } else {
+              this.characters = results
+            }
+          } else {
+            const allResults = data.results ?? []
+            this.totalPages = Math.ceil((data.count ?? allResults.length) / PER_PAGE)
+            this.totalCount = data.count ?? allResults.length
+            const offset = ((this.page - 1) * PER_PAGE) % 20
+            const slice = allResults.slice(offset, offset + PER_PAGE)
+            if (isAppend) {
+              this.characters = this.characters.concat(slice)
+            } else {
+              this.characters = slice
+            }
+          }
+
+          const skipSelect = window.innerWidth < 1024 && this.paginationType === 'infinite'
+          if (!skipSelect && (resetSelected || !this.selected || !this.characters.find(c => c.id === this.selected.id))) {
             this.selected = this.characters[0] ?? null
           }
         } catch (e) {
@@ -277,6 +337,7 @@ ob_start();
       },
       goToPage(p) {
         this.page = p
+        this.characters = []
         this.fetchCharacters()
       },
       updateFilterPos() {
