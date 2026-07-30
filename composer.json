@@ -1,0 +1,23 @@
+{
+    "name": "htorres/blossom-test",
+    "description": "prueba de blossom",
+    "version": "1.0.0",
+    "autoload": {
+        "psr-4": {
+            "Htorres\\BlossomTest\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Henry Torres",
+            "email": "henrylapps@gmail.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^8.0"
+    },
+    "scripts": {
+        "dev": "npm run dev",
+        "build": "npm run build"
+    }
+}
