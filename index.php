@@ -11,7 +11,7 @@ ob_start();
   <div x-data="charactersApp()" class="flex h-screen w-screen overflow-hidden">
 
     <!-- Sidebar Section -->
-    <aside class="w-[350px] bg-bg-sidebar border-r border-border-color flex flex-col p-6 px-4">
+    <aside class="w-full lg:w-[350px] bg-bg-sidebar border-r border-border-color flex flex-col p-6 px-4">
       <h1 class="text-xl font-bold mb-5 text-text-main">Rick and Morty list</h1>
 
       <!-- Search and Filter Bar -->
