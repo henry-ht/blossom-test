@@ -1,64 +1,64 @@
 # Blossom Test
 
-Aplicación PHP con Tailwind CSS, Vite y Alpine.js que consume la API pública de Rick and Morty.
+PHP application built with Tailwind CSS, Vite and Alpine.js that consumes the public Rick and Morty API.
 
-## Requisitos
+## Requirements
 
 - PHP >= 8.3
-- Node.js (con npm)
+- Node.js (with npm)
 - Composer
 
-## Instalación
+## Installation
 
 ```bash
-# Instalar dependencias de PHP
+# Install PHP dependencies
 composer install
 
-# Instalar dependencias de JavaScript
+# Install JavaScript dependencies
 npm install
 
-# Copiar y configurar el archivo de entorno
+# Copy and configure the environment file
 cp .env.example .env
 ```
 
-### Configuración del `.env`
+### `.env` configuration
 
-| Variable           | Descripción                                             | Ejemplo        |
-| ------------------ | ------------------------------------------------------- | -------------- |
-| `BASE_PATH`        | Ruta base donde vive la app (vacío si es la raíz).      | `/blossom-test`|
-| `API_PER_PAGE`     | Cantidad de personajes por página.                      | `10`           |
-| `PAGINATION_TYPE`  | `normal` (paginación) o `infinite` (scroll infinito).   | `normal`       |
+| Variable          | Description                                          | Example        |
+| ----------------- | ---------------------------------------------------- | -------------- |
+| `BASE_PATH`       | Base path where the app lives (empty if at root).    | `/blossom-test`|
+| `API_PER_PAGE`    | Number of characters per page.                       | `10`           |
+| `PAGINATION_TYPE` | `normal` (pagination) or `infinite` (infinite scroll).| `normal`       |
 
-## Servidor local (modo desarrollo)
+## Local server (development mode)
 
 ```bash
 npm run dev
 ```
 
-Esto levanta en paralelo:
+This starts in parallel:
 
-1. El servidor PHP (`php -S localhost:8000 router.php`) en `http://localhost:8000`.
-2. Vite (hot reload) en el puerto `5173`.
+1. The PHP server (`php -S localhost:8000 router.php`) at `http://localhost:8000`.
+2. Vite (hot reload) on port `5173`.
 
-Si el puerto 8000 ya está ocupado, libéralo con:
+If port 8000 is already in use, free it with:
 
 ```bash
 npm run kill
 ```
 
-## Compilar assets
+## Building assets
 
 ```bash
 npm run build
 ```
 
-Genera los archivos compilados (CSS/JS y manifest de Vite) dentro de la carpeta `dist/`. Sin compilar, la app usa Vite en modo desarrollo.
+Generates the compiled files (CSS/JS and Vite manifest) inside the `dist/` folder. Without building, the app uses Vite in development mode.
 
-## Despliegue en hosting
+## Hosting deployment
 
-Sube el proyecto al servidor (Apache) con `mod_rewrite` activado:
+Upload the project to your server (Apache) with `mod_rewrite` enabled:
 
-- Incluye el archivo oculto `.htaccess`.
-- El `.env` no se sube por git; créalo a mano en el hosting.
-- Si la app está en la raíz del dominio, deja `BASE_PATH=` vacío.
-- Ajusta `API_PER_PAGE` y `PAGINATION_TYPE` según prefieras.
+- Include the hidden `.htaccess` file.
+- The `.env` file is not uploaded via git; create it manually on the hosting.
+- If the app lives at the domain root, leave `BASE_PATH=` empty.
+- Adjust `API_PER_PAGE` and `PAGINATION_TYPE` to your preferences.
