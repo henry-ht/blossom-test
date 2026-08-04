@@ -70,7 +70,14 @@ class RickAndMortyService
     private function get(string $endpoint, array $filters, int $page, string $dtoClass): ApiResponseDto
     {
         $query = array_merge($filters, ['page' => $page]);
-        $data = $this->request('GET', $endpoint, ['query' => $query]);
+        try {
+            $data = $this->request('GET', $endpoint, ['query' => $query]);
+        } catch (\RuntimeException $e) {
+            if ($e->getCode() === 404) {
+                return new ApiResponseDto(count: 0, pages: 1, next: null, prev: null, results: []);
+            }
+            throw $e;
+        }
         return ApiResponseDto::fromArray($data, $dtoClass);
     }
 

@@ -9,10 +9,10 @@ $title = 'Inicio';
 ob_start();
 ?>
 
-  <div x-data="charactersApp()" class="flex h-screen w-screen overflow-hidden">
+  <div x-data="charactersApp()" class="grid h-screen w-screen overflow-hidden lg:grid-cols-[350px_1fr]">
 
     <!-- Sidebar Section -->
-    <aside class="w-[350px] bg-bg-sidebar border-r border-border-color flex flex-col p-6 px-4">
+    <aside class="min-w-0 min-h-0 overflow-hidden bg-bg-sidebar border-r border-border-color flex flex-col p-6 px-4">
       <h1 class="text-xl font-bold mb-5 text-text-main">Rick and Morty list</h1>
 
       <!-- Search and Filter Bar -->
@@ -55,7 +55,15 @@ ob_start();
               <span class="text-sm font-semibold whitespace-nowrap overflow-hidden text-ellipsis"
                 :class="selected?.id === char.id ? 'text-accent-purple-text' : 'text-text-main'"
                 x-text="char.name"></span>
-              <span class="text-xs text-text-muted mt-0.5" x-text="char.species"></span>
+              <span class="flex items-center gap-1.5 text-xs text-text-muted mt-0.5 min-w-0">
+                <span class="flex items-center gap-1 shrink-0">
+                  <span class="w-1.5 h-1.5 rounded-full" :class="statusColor(char.status)"></span>
+                  <span x-text="char.status"></span>
+                </span>
+                <span class="shrink-0">|</span>
+                <span class="truncate" x-text="char.species"></span>
+              </span>
+              <span class="text-xs text-text-muted mt-0.5 truncate" x-text="char.location?.name"></span>
             </div>
             <div class="rounded-full p-1 transition-colors duration-200"
               :class="selected?.id === char.id && isProtagonist(char.id) ? 'bg-white shadow-[0_2px_4px_rgba(0,0,0,0.1)]' : ''">
@@ -99,7 +107,7 @@ ob_start();
     </aside>
 
     <!-- Main Detail Section (lg+) -->
-    <main class="hidden lg:block flex-grow py-10 px-[60px] overflow-y-auto">
+    <main class="hidden lg:block min-w-0 py-10 px-[60px] overflow-y-auto">
       <template x-if="selected">
         <div>
             <div class="flex items-center gap-3 mb-8">
@@ -237,6 +245,18 @@ ob_start();
                 class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
                 :class="selectedStatus === 'dead' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Dead</button>
         </div>
+        <h4 class="text-[11px] font-semibold text-gray-500 mt-6 mb-2">Gender</h4>
+        <div class="flex gap-2">
+            <button @click="selectedGender = 'all'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedGender === 'all' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">All</button>
+            <button @click="selectedGender = 'female'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedGender === 'female' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Female</button>
+            <button @click="selectedGender = 'male'; dirtyFilter = true"
+                class="flex-1 h-9 rounded-lg border text-sm font-medium transition-colors cursor-pointer"
+                :class="selectedGender === 'male' ? 'bg-[#EEE3FF] text-[#7C5CFA] border-[#EEE3FF]' : 'border-gray-200 hover:bg-gray-50'">Male</button>
+        </div>
         <button @click="applyFilters()" class="mt-6 w-full h-10 rounded-lg text-sm font-medium transition-colors cursor-pointer"
             :class="dirtyFilter ? 'bg-[#8054C7] text-white hover:bg-[#6B3FB5]' : 'bg-[#F3F4F8] text-gray-500'">Filter</button>
     </div>
@@ -296,11 +316,17 @@ ob_start();
       selectedFilter: 'all',
       selectedSpecie: 'all',
       selectedStatus: 'all',
+      selectedGender: 'all',
       protagonistIds: [1, 2, 3, 4, 5],
       paginationType: PAGINATION_TYPE,
       sentinelObserver: null,
       isProtagonist(id) {
         return this.protagonistIds.includes(id)
+      },
+      statusColor(status) {
+        if (status === 'Alive') return 'bg-[#63D838]'
+        if (status === 'Dead') return 'bg-[#FF4D67]'
+        return 'bg-gray-400'
       },
       async init() {
         this.$watch('openFilter', (val) => {
@@ -362,6 +388,7 @@ ob_start();
         if (this.selectedFilter === 'starred') params.set('protagonists', '1')
         if (this.selectedSpecie !== 'all') params.set('species', this.selectedSpecie)
         if (this.selectedStatus !== 'all') params.set('status', this.selectedStatus)
+        if (this.selectedGender !== 'all') params.set('gender', this.selectedGender)
         if (this.search.length >= 3) params.set('name', this.search)
         const qs = params.toString()
         const url = 'api/characters' + (qs ? '?' + qs : '')
